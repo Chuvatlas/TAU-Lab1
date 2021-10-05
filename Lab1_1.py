@@ -59,7 +59,7 @@ def getUnit(name):
             elif name == 'Интегрирующее звено':
                 unit = matlab.tf([k], [1, 0])
             elif name == 'Идеальное дифференцирующее звено':
-                    unit = matlab.tf([k, 0], [0.00001, 1])
+                unit = matlab.tf([k, 0], [1])
             elif name == 'Реальное дифференцирующее звено':
                 unit = matlab.tf([k, 0], [t, 1])
         else:
@@ -68,56 +68,35 @@ def getUnit(name):
     return unit
 
 def graph (num, title, y, x):
-    pyplot.subplot(2, 2, num)
-    pyplot.tight_layout()  #отступы между графиками
+    pyplot.subplot(2, 1, num)
     pyplot.grid(True)
     if title == 'Переходная характеристика':
-        pyplot.plot(x, y, 'red')
-        pyplot.title(title)
-        pyplot.ylabel('Magnitude')
-        pyplot.xlabel('Time (s)')
+        pyplot.plot(x, y, 'purple')
     elif title == 'Импульсная характеристика':
-        pyplot.plot(x, y, 'blue')
-        pyplot.title(title)
-        pyplot.ylabel('Magnitude')
-        pyplot.xlabel('Time (s)')
-    elif title == 'АЧХ':
         pyplot.plot(x, y, 'green')
-        pyplot.title(title)
-        pyplot.ylabel('Magnitude')
-        pyplot.xlabel('Omega (rad/s)')
-    elif title == 'ФЧХ':
-        pyplot.plot(omega, phase * 180 / math.pi, 'yellow')
-        pyplot.title(title)
-        pyplot.ylabel('Phase (deg)')
-        pyplot.xlabel('Omega (rad/s)')
+    pyplot.title(title)
+    pyplot.ylabel('Амплитуда')
+    pyplot.xlabel('Время (с)')
 
 unitName = choice()
 unit = getUnit(unitName)
-
 
 timeLine = []
 for i in range(0, 10000):
     timeLine.append(i/1000)
 
-omega = []
-for i in range(0, 1000):
-    omega.append(i/1000)
-
-#переходная функция
-[y,x] = matlab.step(unit, timeLine)
+[y,x] = matlab.step(unit, timeLine) #переходная функция
 graph(1, 'Переходная характеристика', y, x)
+[y,x] = matlab.impulse(unit, timeLine) #импульсная функция
+graph(2, 'Импульсная характеристика', y, x)
 
-#импульсная функция
-[y,x] = matlab.impulse(unit, timeLine)
-graph(3, 'Импульсная характеристика', y, x)
-
-#АЧХ и ФЧХ
-mag, phase, omega = matlab.freqresp(unit, omega)
-graph(2, 'АЧХ', mag, omega)
-graph(4, 'ФЧХ', omega, phase * 180 / math.pi)
+f = 100/(1000-100)/450/1000
+k = matlab.freqs(unit, timeLine, f*2*math.pi)
+pyplot.subplot(2,1,1)
+pyplot.plot(f,abs(k)/max(abs(k))), grid
+pyplot.subplot(2,1,2)
+pyplot.plot(f, unwrap(angle(k))), grid
 
 pyplot.show()
-
 
 
